@@ -1,0 +1,54 @@
+version: "3"
+services:
+  gitea_db:
+    image: mariadb:latest
+    container_name: gitea_db
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=gitea
+      - MYSQL_USER=gitea
+      - MYSQL_PASSWORD=gitea
+      - MYSQL_DATABASE=gitea
+    networks:
+      - gitea_db
+    volumes:
+      - ./mysql:/var/lib/mysql
+  gitea:
+    image: gitea/gitea:1.16.0
+    container_name: gitea
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - GITEA__database__DB_TYPE=mysql
+      - GITEA__database__HOST=gitea_db:3306
+      - GITEA__database__NAME=gitea
+      - GITEA__database__USER=gitea
+      - GITEA__database__PASSWD=gitea
+    restart: always
+    networks:
+      - gitea_db
+      - reverse_proxy
+    volumes:
+      - ./gitea:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    # ports:
+    # - "3000"
+    # - "222:22"
+    depends_on:
+      - gitea_db
+  reverse:
+    image: nginx:latest
+    container_name: reverse_proxy
+    depends_on:
+      - gitea
+    networks:
+      - reverse_proxy
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/nginx.conf
+networks:
+  gitea_db:
+  reverse_proxy:
