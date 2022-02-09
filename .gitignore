@@ -1,2 +1,4 @@
-gitea
-mysql
+gitea/*
+mysql/*
+backup.zip
+.env
